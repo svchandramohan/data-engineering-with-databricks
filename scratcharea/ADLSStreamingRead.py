@@ -31,12 +31,9 @@ dbutils.fs.mount(
 
 # COMMAND ----------
 
-dbutils.fs.cp('abfss://productioncontainer@svcmadlsmsdn.dfs.core.windows.net/ambulancedata/vehicle1_09162014.csv', 'abfss://productioncontainer@svcmadlsmsdn.dfs.core.windows.net/ambulancedatastream/vehicle1_09162014.csv')
+dbutils.fs.cp('abfss://productioncontainer@svcmadlsmsdn.dfs.core.windows.net/ambulancedata/vehicle2_09162014.csv', 'abfss://productioncontainer@svcmadlsmsdn.dfs.core.windows.net/ambulancedatastream/vehicle2_09162014.csv')
 
 # COMMAND ----------
-
-from pyspark.sql.types import *
-from pyspark.sql.functions import *
 
 inputPath = "/mnt/spambulancedata"
 
@@ -57,7 +54,6 @@ streamingCountsDF = (
       )
     .count()
 )
-
 
 # COMMAND ----------
 
@@ -81,13 +77,27 @@ q1 = (
     .format("delta")
     .outputMode("complete")
     .option("checkpointLocation", "/mnt/spambulancedata/chkpoint")
-    .start("delta")
+    .start("/mnt/spambulancedata/delta")
 )
 
 # COMMAND ----------
 
-# MAGIC %sql select * from totalcounts
+# MAGIC %sql select count(*) from totalcounts group by count
 
 # COMMAND ----------
 
+# MAGIC %sql select * from delta1
 
+# COMMAND ----------
+
+q3 = (streamingCountsDF.writeStream
+   .format("delta")
+   #.load("/mnt/spambulancedata")
+   #.groupBy("c1")
+   #.count()
+   #.writeStream
+   .format("delta")
+   .outputMode("complete")
+   .option("checkpointLocation", "/mnt/spambulancedata/chkpointdelta1")
+   .start("/mnt/spambulancedata/delta1")
+  )
